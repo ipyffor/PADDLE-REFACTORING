@@ -148,14 +148,12 @@ class MNIST(Dataset):
 
     def __init__(self,
                  root=None,
-                 chw_format=False,
                  mode='train',
                  transform=None,
                  download=True):
         assert mode.lower() in ['train', 'test'], \
             "mode should be 'train' or 'test', but got {}".format(mode)
         self.mode = mode.lower()
-        self.chw_format = chw_format
         self.root = root
 
         if self.root is None:
@@ -244,13 +242,13 @@ class MNIST(Dataset):
                             np.array([labels[i]]).astype('int64'))
 
     def __getitem__(self, idx):
-        image, label = self.images[idx], self.labels[idx]
-        if self.chw_format:
-            image = np.reshape(image, [1, 28, 28])
-        else:
-            image = np.reshape(image, [28, 28, 1])
+        image, label = self.images[idx].astype('uint8'), self.labels[idx]
+
+
+        image = np.reshape(image, [28, 28, 1])
         if self.transform is not None:
             image = self.transform(image)
+        # print(image.shape, label)
         return image, label
 
     def __len__(self):
@@ -258,12 +256,12 @@ class MNIST(Dataset):
 
 
 if __name__ == '__main__':
-    dataset = MNIST(root='./test', chw_format=False,mode='train')
+    dataset = MNIST(root='./test', chw_format=True,mode='train')
     from paddle import fluid
     from paddle.fluid.io import DataLoader
 
     place = fluid.CPUPlace()
-    fluid.enable_imperative(place)
+    fluid.enable_dygraph(place)
     loader = DataLoader(dataset, places=place, return_list=True, batch_size=256, shuffle=True, num_workers=0)
     print(len(loader))
     itr = iter(loader)

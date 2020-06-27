@@ -93,6 +93,7 @@ def to_tensor(pic):
     Returns:
         Tensor: Converted image.
     """
+
     if not(_is_pil_image(pic) or _is_numpy(pic)):
         raise TypeError('pic should be PIL Image or ndarray. Got {}'.format(type(pic)))
 
@@ -104,9 +105,12 @@ def to_tensor(pic):
         if pic.ndim == 2:
             pic = pic[:, :, None]
 
-        img = dygraph.to_variable(pic.transpose((2, 0, 1)))
+        img = pic.transpose((2, 0, 1)).astype('float32')/255
         # backward compatibility
-        return img.astype(dtype='float32')/255
+        # print('ddd',pic.shape)
+        # img = img.astype(dtype='float32')
+        # print(pic.shape)
+        return img
     else:
         return pic
         # else:
@@ -154,7 +158,6 @@ def resize(img, size, interpolation=cv2.INTER_LINEAR):
 
     if isinstance(interpolation, Sequence):
         interpolation = random.choice(interpolation)
-
     if isinstance(size, int):
         h, w = img.shape[:2]
         if (w <= h and w == size) or (h <= w and h == size):
