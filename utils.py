@@ -5,8 +5,7 @@ from paddle.fluid import dygraph, core_avx
 
 import math
 irange = range
-
-
+import cv2
 
 def make_grid(tensor, nrow=8, padding=2,
               normalize=False, range=None, scale_each=False, pad_value=0):
@@ -101,7 +100,7 @@ def narraw(input, dim, start, length):
     elif dim == 3:
         return input[:,:,:, start:start + length]
 
-def save_image(tensor, fp, nrow=8, padding=2,
+def save_image(tensor, fp, nrow=8, padding=4,
                normalize=False, range=None, scale_each=False, pad_value=0, format=None):
     """Save a given Tensor into an image file.
 
@@ -120,5 +119,7 @@ def save_image(tensor, fp, nrow=8, padding=2,
     ndarr =F.clamp((grid*255+0.5),0,255)
     ndarr = F.transpose(ndarr, [1, 2, 0]).numpy().astype('uint8')
     # ndarr = grid.mul(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to('cpu', torch.uint8).numpy()
-    im = Image.fromarray(ndarr)
-    im.save(fp, format=format)
+    # cv2.imshow('img', ndarr)
+    # cv2.waitKey(2000)
+    # im = Image.fromarray(ndarr)
+    cv2.imwrite(fp, ndarr)
