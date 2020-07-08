@@ -7,6 +7,8 @@ import math
 irange = range
 import cv2
 
+__all__ = ['save_image']
+
 def make_grid(tensor, nrow=8, padding=2,
               normalize=False, range=None, scale_each=False, pad_value=0):
     """Make a grid of images.
