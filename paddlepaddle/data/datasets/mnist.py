@@ -45,7 +45,7 @@ TRAIN_LABEL_MD5 = 'd53e105ee54ea40749a09fcbcd1e9432'
 
 def _check_exists_and_download(path, url, md5, module_name, download=True):
     if path is None:
-        path = os.path.expanduser('~') + '/paddle/dataset'
+        path = os.path.expanduser('~') + '/paddlepaddle/dataset'
     if download:
         return download_file(url, path, module_name, md5)
     else:
@@ -157,7 +157,7 @@ class MNIST(Dataset):
         self.root = root
 
         if self.root is None:
-            self.root = os.path.expanduser('~') + '/paddle/dataset'
+            self.root = os.path.expanduser('~') + '/paddlepaddle/dataset'
 
         if download:
             image_url = TRAIN_IMAGE_URL if mode == 'train' else TEST_IMAGE_URL

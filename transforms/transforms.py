@@ -26,7 +26,7 @@ import collections
 import warnings
 import traceback
 
-from . import functional as F
+# from . import functional as F
 
 if sys.version_info < (3, 3):
     Sequence = collections.Sequence
@@ -52,7 +52,7 @@ __all__ = [
     "ContrastTransform",
     "HueTransform",
     "ColorJitter",
-    "ToTensor",
+    "SimpleNorm",
 ]
 
 
@@ -235,7 +235,8 @@ class Resize(object):
         self.interpolation = interpolation
 
     def __call__(self, img):
-        return F.resize(img, self.size, self.interpolation)
+        return cv2.resize(img, self.size, interpolation=self.interpolation)
+        # return F.resize(img, self.size, self.interpolation)
 
 
 class RandomResizedCrop(object):
@@ -316,7 +317,7 @@ class RandomResizedCrop(object):
     def __call__(self, img):
         x, y, w, h = self._get_params(img)
         cropped_img = img[y:y + h, x:x + w]
-        return F.resize(cropped_img, self.output_size, self.interpolation)
+        return cv2.resize(cropped_img, self.output_size, interpolation=self.interpolation)
 
 
 class CenterCropResize(object):
@@ -362,7 +363,7 @@ class CenterCropResize(object):
     def __call__(self, img):
         c, x, y = self._get_params(img)
         cropped_img = img[x:x + c, y:y + c, :]
-        return F.resize(cropped_img, self.size, self.interpolation)
+        return cv2.resize(cropped_img, self.size, interpolation = self.interpolation)
 
 
 class CenterCrop(object):
@@ -435,7 +436,7 @@ class RandomHorizontalFlip(object):
 
     def __call__(self, img):
         if np.random.random() < self.prob:
-            return F.flip(img, code=1)
+            return cv2.flip(img, flipCode=1)
         return img
 
 
@@ -466,11 +467,11 @@ class RandomVerticalFlip(object):
 
     def __call__(self, img):
         if np.random.random() < self.prob:
-            return F.flip(img, code=0)
+            return cv2.flip(img, flipCode=0)
         return img
 
 
-class ToTensor(object):
+class SimpleNorm(object):
     """Convert a ``PIL Image`` or ``numpy.ndarray`` to tensor.
 
     Converts a PIL Image or numpy.ndarray (H x W x C) in the range
@@ -480,6 +481,13 @@ class ToTensor(object):
 
     In the other cases, tensors are returned without scaling.
     """
+    def __init__(self, srcFormat='hwc', dstFormat='chw', normalize = True):
+        format = ['chw', 'hwc']
+        assert (srcFormat in format) and (dstFormat in format)
+        self.srcFormat = srcFormat
+        self.dstFormat = dstFormat
+        self.normalize = normalize
+        pass
 
     def __call__(self, pic):
         """
@@ -489,7 +497,12 @@ class ToTensor(object):
         Returns:
             Tensor: Converted image.
         """
-        return F.to_tensor(pic)
+        if self.srcFormat != self.dstFormat:
+            order = (2, 0, 1) if self.srcFormat == 'hwc' else (1, 2, 0)
+            pic = pic.transpose(order)
+        if self.normalize:
+            pic = pic.astype('float32')/255
+        return pic
 
 
 class Normalize(object):
@@ -520,18 +533,33 @@ class Normalize(object):
     
     """
 
-    def __init__(self, mean=0.0, std=1.0):
-        if isinstance(mean, numbers.Number):
-            mean = [mean, mean, mean]
+    def __init__(self, mean=0.0, std=1.0, format = 'chw'):
+        formats = ['chw', 'hwc']
+        assert format in formats
 
-        if isinstance(std, numbers.Number):
-            std = [std, std, std]
+        self.mean = mean
+        self.std = std
+        self.format = format
+        self.channel = 0 if format == 'chw' else 2
 
-        self.mean = np.array(mean, dtype=np.float32).reshape(len(mean), 1, 1)
-        self.std = np.array(std, dtype=np.float32).reshape(len(std), 1, 1)
 
     def __call__(self, img):
-        return (img - self.mean) / self.std
+        mean = self.mean
+        std = self.std
+
+        if img.dim ==2 or img.shape[self.channel] == 1:
+            assert isinstance(mean, numbers.Number) or (len(mean) == 1 and len(std) == 1)
+            mean = np.array(mean, dtype=np.float32)
+            std = np.array(std, dtype=np.float32)
+        else:
+            shape = [3, 1, 1] if self.format == 'chw' else [1, 1, 3]
+            if isinstance(mean, numbers.Number):
+                mean = np.array([mean, mean, mean], dtype=np.float32).reshape(shape)
+            if isinstance(std, numbers.Number):
+                std = np.array([std, std, std], dtype=np.float32).reshape(shape)
+
+
+        return (img - mean) / std
 
 
 class Permute(object):
