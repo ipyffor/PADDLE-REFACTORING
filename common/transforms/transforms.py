@@ -481,7 +481,7 @@ class SimpleNorm(object):
 
     In the other cases, tensors are returned without scaling.
     """
-    def __init__(self, srcFormat='hwc', dstFormat='chw', normalize = True):
+    def __init__(self, srcFormat='chw', dstFormat='chw', normalize = True):
         format = ['chw', 'hwc']
         assert (srcFormat in format) and (dstFormat in format)
         self.srcFormat = srcFormat
@@ -547,7 +547,7 @@ class Normalize(object):
         mean = self.mean
         std = self.std
 
-        if img.dim ==2 or img.shape[self.channel] == 1:
+        if img.ndim ==2 or img.shape[self.channel] == 1:
             assert isinstance(mean, numbers.Number) or (len(mean) == 1 and len(std) == 1)
             mean = np.array(mean, dtype=np.float32)
             std = np.array(std, dtype=np.float32)
