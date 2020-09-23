@@ -7,10 +7,10 @@ __all__ = ['save_image']
 
 
 
-def save_image(img,fp,  ncol = 8, padding = 4, normlize_regression = None, pad_value = 0, format = 'chw'):
+def save_image(imgs, fp, ncol = 8, padding = 4, normlize_regression = None, pad_value = 0, format ='chw'):
     '''
 
-    :param img: narray [b, c, h, w]
+    :param imgs: narray [b, c, h, w]
     :param ncol: 列数
     :param padding: 填充宽度
     :param normlize_regression: 反normalize函数，默认int((x+1)/2 *255),需要放缩到0-255
@@ -20,35 +20,35 @@ def save_image(img,fp,  ncol = 8, padding = 4, normlize_regression = None, pad_v
 
     assert format in ['chw', 'hwc']
     if format == 'chw':
-        img = img.transpose(0, 2, 3, 1)
-    height, width, channel = img.shape[1:]
-    b = len(img)
+        imgs = imgs.transpose(0, 2, 3, 1)
+    height, width, channel = imgs.shape[1:]
+    b = len(imgs)
     if normlize_regression is None:
-        img = ((img+1)/2)
+        imgs = ((imgs + 1) / 2)
     else:
-        img = normlize_regression(img)
+        imgs = normlize_regression(imgs)
 
     f = b % ncol
     if f != 0:
         lack_img = ncol - f
-        img = np.concatenate((img, np.zeros([lack_img, height, width, channel], img.dtype)), 0)
+        imgs = np.concatenate((imgs, np.zeros([lack_img, height, width, channel], imgs.dtype)), 0)
         b += lack_img
 
-    img = np.concatenate(np.split(img, b), 1).squeeze(0)
-    h,_,c = img.shape
+    imgs = np.concatenate(np.split(imgs, b), 1).squeeze(0)
+    h,_,c = imgs.shape
 
-    grid_space = np.ones([h, padding,c], dtype=img.dtype)
+    grid_space = np.ones([h, padding,c], dtype=imgs.dtype)
 
-    img = np.concatenate((img, grid_space), 1)
-    img = np.concatenate(np.split(img, b, 0), 1)
-    _, w, c = img.shape
-    grid_space = np.ones([padding, w, c], dtype=img.dtype)
-    img = np.concatenate((img, grid_space), 0)
+    imgs = np.concatenate((imgs, grid_space), 1)
+    imgs = np.concatenate(np.split(imgs, b, 0), 1)
+    _, w, c = imgs.shape
+    grid_space = np.ones([padding, w, c], dtype=imgs.dtype)
+    imgs = np.concatenate((imgs, grid_space), 0)
     row = b // ncol
-    img = np.concatenate(np.split(img, row, 1), 0)[:0 - padding, :0 - padding]
+    imgs = np.concatenate(np.split(imgs, row, 1), 0)[:0 - padding, :0 - padding]
 
-    img = (img*255).astype('uint8')
-    cv2.imwrite(fp, img)
+    imgs = (imgs * 255).astype('uint8')
+    cv2.imwrite(fp, imgs)
     pass
 
 

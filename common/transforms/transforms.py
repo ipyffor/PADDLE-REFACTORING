@@ -101,6 +101,8 @@ class Compose(object):
                 print("fail to perform transform [{}] with error: "
                       "{} and stack:\n{}".format(f, e, str(stack_info)))
                 raise e
+        if len(data) == 1:
+            data = data[0]
         return data
 
     def __repr__(self):
